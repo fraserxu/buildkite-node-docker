@@ -1,6 +1,6 @@
 # Alpine Linux Dockerfile
 
-FROM alpine:3.2
+FROM blueimp/alpine:3.2
 
 MAINTAINER Fraser Xu <xvfeng123@gmail.com>
 
@@ -23,63 +23,30 @@ RUN apk add --update \
     linux-headers \
     paxctl \
     libgcc \
-    libstd++ \
+    libstdc++ \
     openssl \
     # Install the docker package for its dependencies (git, iptables, xz):
     docker \
     # Install bash for the dind setup script:
     bash \
+    # Install py-pip as requirement to install docker-compose:
+    py-pip \
     # Install the openssh-client (used by CI agents like buildkite):
     openssh-client \
   # Override the packaged docker (1.6.2) with docker 1.7.1:
   && curl https://get.docker.com/builds/Linux/x86_64/docker-1.7.1 > \
     /usr/bin/docker && chmod 755 /usr/bin/docker \
-    # Clean up obsolete files:
+  # Install docker-compose (and upgrade pip):
+  && pip install --upgrade \
+    pip \
+    docker-compose==1.5.2 \
+  # Clean up obsolete files:
   && rm -rf \
     # Clean up any temporary files:
     /tmp/* \
     # Clean up the pip cache:
     /root/.cache \
     /var/cache/apk/*
-
-# Install the entrypoint wrapper script:
-RUN printf '%s\n' '#!/bin/sh' \
-  'for file in /usr/local/etc/entrypoint.d/*; do "$file"; done; exec "$@"' > \
-  /usr/local/bin/entrypoint && chmod 755 /usr/local/bin/entrypoint
-
-# Create the entrypoint init scripts directory:
-RUN mkdir -p /usr/local/etc/entrypoint.d
-
-# Install the envconfig script:
-RUN wget -O /usr/local/bin/envconfig \
-  https://raw.githubusercontent.com/blueimp/container-tools/1.7.0/bin/envconfig.sh && \
-  chmod 755 /usr/local/bin/envconfig
-
-# Create an empty envconfig configuration file:
-RUN touch /usr/local/etc/envconfig.conf
-
-# Add envconfig as entrypoint init script:
-RUN ln -s /usr/local/bin/envconfig /usr/local/etc/entrypoint.d/20-envconfig.sh
-
-# Install superd - a supervisor daemon for multi-process docker containers:
-RUN wget -O /usr/local/bin/superd \
-  https://raw.githubusercontent.com/blueimp/container-tools/1.7.0/bin/superd.sh && \
-  chmod 755 /usr/local/bin/superd
-
-# Create an empty superd configuration file:
-RUN touch /usr/local/etc/superd.conf
-
-# Install log - a script to execute a given command and log the output:
-RUN wget -O /usr/local/bin/log \
-  https://raw.githubusercontent.com/blueimp/container-tools/1.7.0/bin/log.sh && \
-  chmod 755 /usr/local/bin/log
-
-# Install gosu - a tool to execute a command as another user:
-RUN wget -O /usr/local/bin/gosu \
-  https://github.com/tianon/gosu/releases/download/1.5/gosu-amd64 && \
-  chmod 755 /usr/local/bin/gosu
-
-ENTRYPOINT ["entrypoint"]
 
 # Install the dind (docker-in-docker) setup script:
 RUN wget -O /usr/local/bin/dind \
@@ -109,4 +76,4 @@ RUN curl -sSL https://nodejs.org/dist/${VERSION}/node-${VERSION}.tar.gz | tar -x
     /usr/share/man /tmp/* /var/cache/apk/* /root/.npm /root/.node-gyp \
     /usr/lib/node_modules/npm/man /usr/lib/node_modules/npm/doc /usr/lib/node_modules/npm/html
 
-CMD ["sh"]
+CMD ["bash"]
