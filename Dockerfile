@@ -55,6 +55,12 @@ RUN wget -O /usr/local/bin/dind \
   https://raw.githubusercontent.com/docker/docker/v1.7.1/hack/dind && \
   chmod 755 /usr/local/bin/dind
 
+# Add the superd configuration file:
+COPY superd.conf /usr/local/etc/
+
+# Add the entrypoint init scripts:
+COPY entrypoint.d /usr/local/etc/entrypoint.d
+
 # Install Nodejs
 RUN curl -sSL https://nodejs.org/dist/${VERSION}/node-${VERSION}.tar.gz | tar -xz && \
   cd /node-${VERSION} && \
