@@ -46,18 +46,14 @@ RUN apk add --update \
     /tmp/* \
     # Clean up the pip cache:
     /root/.cache \
-    /var/cache/apk/*
+    /var/cache/apk/* \
+    # Remove any compiled python files (compile on demand):
+    `find / -regex '.*\.py[co]'`
 
 # Install the dind (docker-in-docker) setup script:
 RUN wget -O /usr/local/bin/dind \
   https://raw.githubusercontent.com/docker/docker/v1.7.1/hack/dind && \
   chmod 755 /usr/local/bin/dind
-
-# Add the superd configuration file:
-COPY superd.conf /usr/local/etc/
-
-# Add the entrypoint init scripts:
-COPY entrypoint.d /usr/local/etc/entrypoint.d
 
 # Install Nodejs
 RUN curl -sSL https://nodejs.org/dist/${VERSION}/node-${VERSION}.tar.gz | tar -xz && \
